@@ -10,7 +10,8 @@ defmodule BinTree do
   position is either :left or :right (or nil for the root) and represents
   which child of the parent this node is.
 
-  A zipper contains {curr_node, [parent_nodes]}.
+  A zipper is a list of nodes whose head is the current node and tail is the
+  list of parents of the node.
   """
   @type t :: %BinTree{ value: any, left: BinTree.t | nil, right: BinTree.t | nil }
   defstruct value: nil, left: nil, right: nil
@@ -22,14 +23,14 @@ defmodule Zipper do
   """
   @spec from_tree(BT.t) :: Z.t
   def from_tree(bt) do
-    {{bt, nil}, []}
+    [{bt, nil}]
   end
 
   @doc """
   Get the complete tree from a zipper.
   """
   @spec to_tree(Z.t) :: BT.t
-  def to_tree({{root, nil}, []}), do: root
+  def to_tree([{root, nil}]), do: root
   def to_tree(z), do: to_tree(up(z))
 
   @doc """
@@ -37,7 +38,7 @@ defmodule Zipper do
   """
   @spec value(Z.t) :: any
   def value(z) do
-    {{node, _}, _} = z
+    [{node, _} | _] = z
     node.value
   end
 
@@ -46,9 +47,9 @@ defmodule Zipper do
   """
   @spec left(Z.t) :: Z.t | nil
   def left(z) do
-    {{node, pos}, ancestors} = z
+    [{node, _} | _] = z
     if node.left do
-      {{node.left, :left}, [{node, pos}|ancestors]}
+      [{node.left, :left} | z]
     else
       nil
     end
@@ -59,9 +60,9 @@ defmodule Zipper do
   """
   @spec right(Z.t) :: Z.t | nil
   def right(z) do
-    {{node, pos}, ancestors} = z
+    [{node, _} | _] = z
     if node.right do
-      {{node.right, :right}, [{node, pos}|ancestors]}
+      [{node.right, :right} | z]
     else
       nil
     end
@@ -72,8 +73,9 @@ defmodule Zipper do
   """
   @spec up(Z.t) :: Z.t
   def up(z) do
-    {{node, position}, [{parent, parent_pos}|ancestors]} = z
-    {{%{parent|position => node}, parent_pos}, ancestors}
+    [{node, position} | ancestors] = z
+    [{parent, parent_pos} | rest] = ancestors
+    [{%{parent|position => node}, parent_pos} | rest]
   end
 
   @doc """
@@ -101,7 +103,7 @@ defmodule Zipper do
   end
 
   defp set(z, v, which) do
-    {{node, position}, ancestors} = z
-    {{%{node|which => v}, position}, ancestors}
+    [{node, position} | ancestors] = z
+    [{%{node|which => v}, position} | ancestors]
   end
 end
