@@ -16,8 +16,9 @@ defmodule Palindromes do
 
   defp condense_map([], m), do: m
   defp condense_map([{n, pair}|t], m) do
-    IO.puts "n #{n}, pair #{inspect pair}, t #{inspect t}, m #{inspect m}"
-    condense_map(t, Map.put(m, n, [Enum.sort(pair) | Map.get(m, n, [])]))
+    pairs = [Enum.sort(pair) | Map.get(m, n, [])]
+    |> Enum.uniq
+    condense_map(t, Map.put(m, n, pairs))
   end
 
   def palindrome?(n) do
