@@ -13,7 +13,8 @@ defmodule BankAccount do
   """
   @spec open_bank() :: account
   def open_bank() do
-    Agent.start_link(fn -> 0 end)
+    {:ok, pid} = Agent.start_link(fn -> 0 end)
+    pid
   end
 
   @doc """
