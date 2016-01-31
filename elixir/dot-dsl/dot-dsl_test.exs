@@ -22,7 +22,7 @@ defmodule DotTest do
     end
   end
 
-  # @tag :pending
+  @tag :pending
   test "empty graph" do
     assert %Graph{} == exprt(Dot.graph do end)
   end
@@ -47,7 +47,7 @@ defmodule DotTest do
     assert %Graph{attrs: [foo: 1]} == exprt(Dot.graph do graph [foo: 1] end)
   end
 
-  @tag :pending
+  # @tag :pending
   test "graph with attributes" do
     assert %Graph{
       attrs: [bar: true, foo: 1, title: "Testing Attrs"],
