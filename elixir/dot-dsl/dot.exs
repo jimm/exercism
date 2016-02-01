@@ -9,13 +9,17 @@ defmodule Dot do
     end
   end
   defmacro graph([do: block]) do
+    IO.puts "normal do block"
     IO.inspect block
     do_graph(block)
   end
 
-  def do_graph(lines) when is_list(lines) do
+  def do_graph({:__block__, _, lines}) when is_list(lines) do
+    IO.puts "processing lines"
     graph = Enum.reduce(lines, %Graph{}, fn(line, g) ->
+      IO.puts "processing line #{inspect line}"
       line_graph = do_graph(line)
+      IO.puts "line_graph = #{inspect line_graph}"
       g = %{g | attrs: g.attrs ++ line_graph.attrs}
       g = %{g | nodes: g.nodes ++ line_graph.nodes}
       %{g | edges: g.edges ++ line_graph.edges}
