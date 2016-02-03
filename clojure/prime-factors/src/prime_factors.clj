@@ -1,27 +1,35 @@
 (ns prime-factors)
 
-(defn- prime-test
-  [n i j h]
-  (loop [i i]
-    (cond (= n i) (>= i h)
-          (zero? (rem n i)) (= i h)
-          :else (recur (inc i)))))
+;;; This works, but is extremely slow. Finding the third prime factor of
+;;; 93819012551 takes much too long.
 
-(defn- prime? [n]
-  (let [ceiling (inc (int (Math/sqrt n)))]
-    (if (= n (* ceiling ceiling)) false
-        (prime-test n 2 ceiling ceiling))))
+(defn- prime-test
+  [^long n ^long i ^long ceiling]
+  (if (= i ceiling)
+    true
+    (loop [i i]
+      (cond (= n i) (>= i ceiling)
+            (zero? (rem n i)) (= i ceiling)
+            :else (recur (unchecked-inc i))))))
+
+(defn- prime? [^long n]
+  (let [ceiling (unchecked-inc (int (Math/sqrt n)))]
+    (if (= n (* ceiling ceiling))
+      false
+      (prime-test n 2 ceiling))))
 
 ;;; Assumes n is either 2 or odd.
-(defn- next-prime [n]
-  (if (= n 2) 3
-      (first
-       (take 1
-             (drop-while (comp not prime?)
-                         (iterate #(+ % 2) (+ n 2)))))))
+(defn- next-prime ^long [^long n]
+  (if (= n 2)
+    3
+    (first
+     (take 1
+           (drop-while (comp not prime?)
+                       (iterate #(+ % 2) (+ n 2)))))))
 
-(defn of [n]
+(defn of [^long n]
   (loop [n n, prime 2, prime-factors ()]
-    (cond (= n 1) (reverse prime-factors)
-          (zero? (rem n prime)) (recur (/ n prime) prime (conj prime-factors prime))
-          :else (recur n (next-prime prime) prime-factors))))
+    (cond
+      (= n 1) (reverse prime-factors)
+      (zero? (rem n prime)) (recur (/ n prime) prime (conj prime-factors prime))
+      :else (recur n (next-prime prime) prime-factors))))
