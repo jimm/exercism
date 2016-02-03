@@ -5,82 +5,69 @@ defmodule CustomSet do
   # implemented.
   @behaviour Set
 
-  defstruct elements: []
+  defstruct list: []
 
   def new() do
     %CustomSet{}
   end
 
   def new(coll) do
-    %CustomSet{elements: coll |> Enum.uniq}
+    %CustomSet{list: coll |> Enum.uniq |> Enum.sort}
   end
 
-  def empty(), do: new
+  def empty(_cs), do: new
 
   def delete(cs, value) do
-    deleted = cs.elements |> Enum.reduce([], fn(v, acc) ->
-      if v === value, do: acc, else: [v | acc]
-    end)
-    %{cs | elements: deleted}
+    new(cs.list |> List.delete(value))
   end
 
   def difference(cs1, cs2) do
-    # Enum.member? uses ===. The tests require == (for example, 2 must match
-    # 2.0) so I can't use member?.
-    diff = cs1.elements |> Enum.reduce([], fn(v, acc) ->
-      found = cs2.elements |> Enum.reduce(false, fn(v2, acc2) ->
-        if v == v2, do: true, else: acc2
-      end)
-      if found, do: acc, else: [v|acc]
-     end)
-    IO.puts "diff of #{inspect cs1.elements} and #{inspect cs2.elements} = #{inspect Enum.reverse(diff)}"
-    %CustomSet{elements: Enum.reverse(diff)}
+    new(cs1.list -- cs2.list)
   end
 
   def disjoint?(cs1, cs2) do
     # We could make this faster by short-circuiting, but with the sizes
     # we're working with it doesn't matter.
-    same = for v1 <- cs1.elements,
-               v2 <- cs2.elements,
+    same = for v1 <- cs1.list,
+               v2 <- cs2.list,
                v1 === v2 do
                  v1
                end
     length(same) == 0
   end
 
-  def equal?(%CustomSet{elements: coll1}, %CustomSet{elements: coll2}) when length(coll1) != length(coll2), do: false
-  def equal?(%CustomSet{elements: coll1}, %CustomSet{elements: coll2}) do
-    Enum.zip(Enum.sort(coll1), Enum.sort(coll2))
+  def equal?(%CustomSet{list: s1}, %CustomSet{list: s2}) when length(s1) != length(s2), do: false
+  def equal?(%CustomSet{list: s1}, %CustomSet{list: s2}) do
+    Enum.zip(Enum.sort(s1), Enum.sort(s2))
     |> Enum.reduce(true, fn({v1, v2}, acc) ->
       if v1 != v2, do: false, else: acc
     end)
   end
 
   def intersection(cs1, cs2) do
-    cs1
+    same = for v1 <- cs1.list,
+               v2 <- cs2.list,
+               v1 === v2 do
+                 v1
+               end
+    new(same)
   end
 
   def member?(cs, value) do
-    true
+    length(cs.list) != length(cs.list -- [value])
   end
 
   def put(cs, value) do
-    cs
+    new([value | cs.list] |> Enum.sort)
   end
 
-  def size(cs) do
-    length(cs.elements)
-  end
+  def size(cs), do: length(cs.list)
 
   def subset?(cs1, cs2) do
-    true
+    length(cs1.list -- cs2.list) == 0
   end
 
-  def to_list(%{elements: es}) do
-    es
-  end
+  def to_list(cs), do: cs.list
 
-  def union(cs1, cs2) do
-    cs1
-  end
+  def union(cs1, cs2), do: new(cs1.list ++ cs2.list)
 end
