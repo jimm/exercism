@@ -18,7 +18,6 @@ defmodule Forth do
   def eval(ev, s) do
     s
     |> words
-    |> IO.inspect
     |> Enum.reduce(ev, fn(word, ev) -> eval_word(ev, word) end)
   end
 
@@ -49,7 +48,11 @@ defmodule Forth do
 
   # looking for name of word to define
   defp exec(%Forth{defining: true} = ev, name) do
-    %{ev | defining: name, words: Map.put(ev.words, name, [])}
+    if String.match?(name, ~r{\A[[:digit:]]}) do
+      raise Forth.InvalidWord
+    else
+      %{ev | defining: name, words: Map.put(ev.words, name, [])}
+    end
   end
 
   # ;
@@ -122,7 +125,11 @@ defmodule Forth do
   # ================ everything else ================
 
   defp exec(%Forth{stack: stack} = ev, word) do
-    %{ev | stack: [word | stack]}
+    if String.match?(word, ~r{\A[[:digit:]]+\z}) do
+      %{ev | stack: [word | stack]}
+    else
+      raise Forth.UnknownWord
+    end
   end
 
   # ================ helpers ================
@@ -130,7 +137,7 @@ defmodule Forth do
   defp words(s) do
     s
     |> String.downcase
-    |> String.split(~r{[\s\000-\037]]}u)
+    |> String.split(~r{[\s[:cntrl:]]}u)
   end
 
   # ================ exceptions ================
@@ -140,15 +147,23 @@ defmodule Forth do
   end
 
   defmodule InvalidWord do
-    defexception [:word]
-    def exception(e), do: "invalid word: #{inspect e.word}"
-    def message(e), do: exception(e)
+    defexception message: "invalid word"
+
+    # I can't get the below to work.
+
+    # defexception [:word]
+    # def exception(e), do: "invalid word: #{inspect e.word}"
+    # def message(e), do: exception(e)
   end
 
   defmodule UnknownWord do
-    defexception [:word]
-    def exception(e), do: "unknown word: #{inspect e.word}"
-    def message(e), do: exception(e)
+    defexception message: "unknown word"
+
+    # I can't get the below to work.
+
+    # defexception [:word]
+    # def exception(e), do: "unknown word: #{inspect e.word}"
+    # def message(e), do: exception(e)
   end
 
   defmodule DivisionByZero do
