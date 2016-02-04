@@ -1,7 +1,7 @@
 defmodule Forth do
   @opaque evaluator :: any
   
-  defstruct stack: [], words: %{}
+  defstruct stack: [], words: %{}, defining: nil
 
   @doc """
   Create a new evaluator.
@@ -17,11 +17,9 @@ defmodule Forth do
   @spec eval(evaluator, String.t) :: evaluator
   def eval(ev, s) do
     s
-    |> String.downcase
-    |> String.split(~r{[^-+\*/[:alnum:]]}u)
-    |> Enum.reduce(ev, fn(word, ev) ->
-      exec(ev, word)
-    end)
+    |> words
+    |> IO.inspect
+    |> Enum.reduce(ev, fn(word, ev) -> eval_word(ev, word) end)
   end
 
   @doc """
@@ -32,6 +30,40 @@ defmodule Forth do
   def format_stack(%Forth{stack: stack}) do
     stack |> Enum.reverse |> Enum.join(" ")
   end
+
+  defp eval_word(ev, word) do
+    definition = Map.get(ev.words, word, nil)
+    if ev.defining == nil && definition do
+      eval(ev, Enum.join(definition, " "))
+    else
+      exec(ev, word)
+    end
+  end
+
+  # ================ defining new words ================
+
+  # :, set defining to true (will become name of definition when seen)
+  defp exec(%Forth{defining: nil} = ev, ":") do
+    %{ev | defining: true}
+  end
+
+  # looking for name of word to define
+  defp exec(%Forth{defining: true} = ev, name) do
+    %{ev | defining: name, words: Map.put(ev.words, name, [])}
+  end
+
+  # ;
+  defp exec(%Forth{defining: name} = ev, ";") when name != nil and name != true do
+    %{ev | defining: nil}
+  end
+
+  # while defining a new word
+  defp exec(%Forth{defining: name} = ev, word) when name != nil do
+    %{ev | words: Map.put(ev.words, name,
+                          [word | Map.get(ev.words, name)])}
+  end
+
+  # ================ mathematics ================
 
   # +
   defp exec(%Forth{stack: [a | [b | stack]]} = ev, "+") do
@@ -61,6 +93,8 @@ defmodule Forth do
     %{ev | stack: [val | stack]}
   end
 
+  # ================ built-in words ================
+
   # dup
   defp exec(%Forth{stack: []}, "dup"), do: raise Forth.StackUnderflow
   defp exec(%Forth{stack: [a | _] = stack} = ev, "dup") do
@@ -69,7 +103,7 @@ defmodule Forth do
 
   # drop
   defp exec(%Forth{stack: []}, "drop"), do: raise Forth.StackUnderflow
-  defp exec(%Forth{stack: [a | stack]} = ev, "drop") do
+  defp exec(%Forth{stack: [_ | stack]} = ev, "drop") do
     %{ev | stack: stack}
   end
 
@@ -80,14 +114,23 @@ defmodule Forth do
   defp exec(_, "swap"), do: raise Forth.StackUnderflow
 
   # over
-  defp exec(%Forth{stack: [a | [b | _]] = stack} = ev, "over") do
+  defp exec(%Forth{stack: [_ | [b | _]] = stack} = ev, "over") do
     %{ev | stack: [b | stack]}
   end
   defp exec(_, "over"), do: raise Forth.StackUnderflow
 
-  # Everything else
+  # ================ everything else ================
+
   defp exec(%Forth{stack: stack} = ev, word) do
     %{ev | stack: [word | stack]}
+  end
+
+  # ================ helpers ================
+
+  defp words(s) do
+    s
+    |> String.downcase
+    |> String.split(~r{[\s\000-\037]]}u)
   end
 
   # ================ exceptions ================
