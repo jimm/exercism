@@ -27,7 +27,7 @@
 (deftest build-board
   (is (= board (queen-attack/board-string {:w [2 4] :b [6 6]}))))
 
-#_(deftest finds-attack-positions
+(deftest finds-attack-positions
   (is (= false (queen-attack/can-attack {:w [2 3] :b [4 7]})))
   (is (= true  (queen-attack/can-attack {:w [2 4] :b [2 7]})))
   (is (= true  (queen-attack/can-attack {:w [5 4] :b [2 4]})))
