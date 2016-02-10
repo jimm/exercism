@@ -5,7 +5,7 @@ mapCGAT 'C' = 'G'
 mapCGAT 'G' = 'C'
 mapCGAT 'A' = 'U'
 mapCGAT 'T' = 'A'
-mapCGAT _   = ' '
+mapCGAT  _  = ' '
 
 toRNA :: String -> String
 toRNA = map mapCGAT
