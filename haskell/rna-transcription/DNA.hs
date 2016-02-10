@@ -1,12 +1,11 @@
 module DNA (toRNA) where
 
 mapCGAT :: Char -> Char
-mapCGAT c
-  | c == 'C'  = 'G'
-  | c == 'G'  = 'C'
-  | c == 'A'  = 'U'
-  | c == 'T'  = 'A'
-  | otherwise = ' '
+mapCGAT 'C' = 'G'
+mapCGAT 'G' = 'C'
+mapCGAT 'A' = 'U'
+mapCGAT 'T' = 'A'
+mapCGAT _   = ' '
 
 toRNA :: String -> String
-toRNA s = map mapCGAT s
+toRNA = map mapCGAT
