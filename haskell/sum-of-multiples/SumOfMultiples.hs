@@ -1,16 +1,15 @@
 module SumOfMultiples (sumOfMultiples, sumOfMultiplesDefault) where
 
--- FIXME: does not de-dupe multipliers that are common between all
--- Data.List.nub is a `uniq` function, see also `concatMap`
+import Data.List (nub)
 
 sumOfMultiples :: [Int] -> Int -> Int
-sumOfMultiples mults upperBound = sum $ map (multsOfSingle upperBound) mults
+sumOfMultiples mults upperBound = sum $ nub ( concatMap (multsOfSingle upperBound) mults )
 
 sumOfMultiplesDefault :: Int -> Int
 sumOfMultiplesDefault = sumOfMultiples [3, 5]
 
-multsOfSingle :: Int -> Int -> Int
-multsOfSingle upperBound x = sum $ multiplesOf upperBound [] 1 x
+multsOfSingle :: Int -> Int -> [Int]
+multsOfSingle upperBound x = multiplesOf upperBound [] 1 x
 
 multiplesOf :: Int -> [Int] -> Int -> Int -> [Int]
 multiplesOf upperBound acc n x
