@@ -5,11 +5,11 @@ import "fmt"
 const TestVersion = 1
 
 type verse struct {
-	animal string
+	animal     string
 	secondLine string
-	caught string
-	lastLine string
-	lastVerse bool
+	caught     string
+	lastLine   string
+	lastVerse  bool
 }
 
 var verses = []verse{
@@ -31,7 +31,7 @@ func Verse(n int) (s string) {
 		s += fmt.Sprintf("\n%s", verses[n].secondLine)
 	}
 	if !verses[n].lastVerse {
-		for i := n-1; i >= 0; i-- {
+		for i := n - 1; i >= 0; i-- {
 			s += fmt.Sprintf("\nShe swallowed the %s to catch the %s",
 				verses[i+1].animal, verses[i].animal)
 			if verses[i].caught != "" {
