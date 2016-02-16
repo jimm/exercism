@@ -17,10 +17,14 @@ func CanQueenAttack(white, black string) (bool, error) {
 
 	row_diff := int(math.Abs(float64(white_row) - float64(black_row)))
 	col_diff := int(math.Abs(float64(white_col) - float64(black_col)))
-	if row_diff == 0 && col_diff == 0 {
+	switch {
+	case row_diff == 0 && col_diff == 0:
 		return false, errors.New("illegal parameters: both pieces are on the same square")
+	case row_diff == 0 || col_diff == 0:
+		return true, nil
+	default:
+		return (row_diff - col_diff) == 0, nil
 	}
-	return (row_diff - col_diff) == 0, nil
 }
 
 func coords(position string) (row, col int, err error) {
@@ -29,7 +33,9 @@ func coords(position string) (row, col int, err error) {
 	err = nil
 	if len(position) != 2 {
 		err = errors.New("illegal parameter: " + position)
+		return
 	}
+
 	if position[0] >= byte('a') && position[0] <= byte('f') {
 		row = int(position[0] - byte('a'))
 	} else {
