@@ -1,11 +1,14 @@
 package luhn
 
 import (
-	"strings"
 	"strconv"
+	"strings"
 )
 
 func Valid(s string) bool {
+	if strings.TrimSpace(s) == "" {
+		return false
+	}
 	return checksum(toUint64(s)) == 0
 }
 
@@ -18,14 +21,15 @@ func toUint64(s string) uint64 {
 	return i
 }
 
-func checksum(i uint64) (csum int) {
+func checksum(i uint64) int {
+	csum := 0
 	for i != 0 {
 		first := int(i % 10)
 		second := int((i / 10) % 10)
 		i /= 100
-		csum += wrap(first) + wrap(second * 2)
+		csum += wrap(first) + wrap(second*2)
 	}
-	return
+	return csum % 10
 }
 
 func wrap(i int) int {
