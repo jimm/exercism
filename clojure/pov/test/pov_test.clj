@@ -97,10 +97,10 @@
        [:2nd-cousin-4]]]]]])
 
 (deftest test-pov
-  (is (= singleton
+#_  (is (= singleton
          (pov/of :x singleton))
       "Can handle singletons")
-  (is (= simple-pulled
+#_  (is (= simple-pulled
          (pov/of :x simple-tree))
       "Can handle simple trees")
   (is (= nested-pulled
