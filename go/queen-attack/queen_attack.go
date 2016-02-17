@@ -6,24 +6,24 @@ import (
 )
 
 func CanQueenAttack(white, black string) (bool, error) {
-	white_row, white_col, white_err := coords(white)
-	if white_err != nil {
-		return false, white_err
+	whiteRow, whiteCol, whiteErr := coords(white)
+	if whiteErr != nil {
+		return false, whiteErr
 	}
-	black_row, black_col, black_err := coords(black)
-	if black_err != nil {
-		return false, black_err
+	blackRow, blackCol, blackErr := coords(black)
+	if blackErr != nil {
+		return false, blackErr
 	}
 
-	row_diff := int(math.Abs(float64(white_row) - float64(black_row)))
-	col_diff := int(math.Abs(float64(white_col) - float64(black_col)))
+	rowDiff := int(math.Abs(float64(whiteRow) - float64(blackRow)))
+	colDiff := int(math.Abs(float64(whiteCol) - float64(blackCol)))
 	switch {
-	case row_diff == 0 && col_diff == 0:
+	case rowDiff == 0 && colDiff == 0:
 		return false, errors.New("illegal parameters: both pieces are on the same square")
-	case row_diff == 0 || col_diff == 0:
+	case rowDiff == 0 || colDiff == 0:
 		return true, nil
 	default:
-		return (row_diff - col_diff) == 0, nil
+		return (rowDiff - colDiff) == 0, nil
 	}
 }
 
@@ -36,15 +36,16 @@ func coords(position string) (row, col int, err error) {
 		return
 	}
 
-	if position[0] >= byte('a') && position[0] <= byte('f') {
-		row = int(position[0] - byte('a'))
-	} else {
-		err = errors.New("bad rank")
-	}
-	if position[1] >= byte('1') && position[1] <= byte('8') {
-		col = int(position[1] - byte('1'))
-	} else {
-		err = errors.New("bad file")
+	row, err = byteToNum(position[0], 'a', 'f', "bad rank")
+	if err == nil {
+		col, err = byteToNum(position[1], '1', '8', "bad file")
 	}
 	return
+}
+
+func byteToNum(c, low, high byte, errMsg string) (int, error) {
+	if c >= byte(low) && c <= byte(high) {
+		return int(c - byte(low)), nil
+	}
+	return 0, errors.New(errMsg)
 }
