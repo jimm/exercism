@@ -3,7 +3,7 @@ package account
 import "sync"
 
 type Account struct {
-	mutex   *sync.Mutex
+	sync.Mutex
 	open    bool
 	balance int64
 }
@@ -12,30 +12,34 @@ func Open(initalDeposit int64) *Account {
 	if initalDeposit < 0 {
 		return nil
 	}
-	return &Account{&sync.Mutex{}, true, initalDeposit}
+	return &Account{open: true, balance: initalDeposit}
 }
 
 func (a *Account) Close() (payout int64, ok bool) {
-	a.lock()
+	a.Lock()
+	defer a.Unlock()
+
 	ok = a.open
 	payout = a.balance
 	a.open = false
 	a.balance = 0
-	a.unlock()
 	return
 }
 
 func (a *Account) Balance() (balance int64, ok bool) {
-	a.lock()
+	a.Lock()
+	defer a.Unlock()
+
 	ok = a.open
 	balance = a.balance
-	a.unlock()
 	return
 }
 
 func (a *Account) Deposit(amount int64) (newBalance int64, ok bool) {
+	a.Lock()
+	defer a.Unlock()
+
 	ok = true
-	a.lock()
 	if !a.open {
 		ok = false
 	} else {
@@ -46,15 +50,5 @@ func (a *Account) Deposit(amount int64) (newBalance int64, ok bool) {
 			a.balance = newBalance
 		}
 	}
-	a.unlock()
-
 	return
-}
-
-func (a *Account) lock() {
-	a.mutex.Lock()
-}
-
-func (a *Account) unlock() {
-	a.mutex.Unlock()
 }
