@@ -20,6 +20,6 @@ func WordCount(phrase string) (freqs Frequency) {
 }
 
 func sanitize(s string) string {
-	r, _ := regexp.Compile("[^a-zA-Z0-9]")
+	r_ := regexp.MustCompile("[^a-zA-Z0-9]")
 	return string(r.ReplaceAll([]byte(s), []byte{' '}))
 }
