@@ -1,14 +1,13 @@
 package say
 
-import "fmt"					// DEBUG
 import "strings"
 
 var powers = []string{
 	"",
 	"thousand",
 	"million",
-	"trillion",
 	"billion",
+	"trillion",
 	"quadrillion",
 	"quintillion",
 	"sextillion",
@@ -61,39 +60,69 @@ func Say(n uint64) string {
 	words := make([]string, 0)
 	power := 0
 	for n > 0 {
-		fmt.Println("Say n", n)
-		words = sayWithPower(n % 100, powers[power], words)
-		n /= 100
+		nextWord := sayWithPower(n%1000, powers[power])
+		if nextWord != "" {
+			words = append([]string{nextWord}[0:], words...)
+		}
+		n /= 1000
 		power++
 	}
-	fmt.Println("finally, words before join", words)
-	return strings.Join(words, " ")
+	return strings.TrimSpace(strings.Join(words, " "))
 }
 
-func sayWithPower(n uint64, powerWord string, words []string) []string {
-	fmt.Println("sayWithPower", n, powerWord, words)
-	words = sayNumber(n, words)
+func sayWithPower(n uint64, powerWord string) string {
+	if n == 0 {
+		return ""
+	}
+	word := sayNumber(n)
 	if powerWord != "" {
-		words = append(words, powerWord)
+		word += " " + powerWord
 	}
-	return words
+	return word
 }
 
-func sayNumber(n uint64, words []string) []string {
-	fmt.Println("sayNumber", n, words)
-	if n < 10 || n >= 20 {
-		word := ""
-		tensPlace := n / 10
-		if tens[tensPlace] != "" {
-			word += tens[tensPlace]
+func sayNumber(n uint64) string {
+	word := sayHundreds(n)
+	n = n % 100
+	if n > 0 {
+		if word != "" {
+			word += " "
 		}
-		digit := n%10
-		if digit > 0 && tens[tensPlace] != "" {
-			word += "-" + digits[digit]
-		}
-		words = append(words, word)
-	} else {
-		words = append(words, teens[n-10])
+		word += sayTo99(n)
 	}
-	return words
+	return word
+}
+
+func sayHundreds(n uint64) string {
+	if n >= 100 {
+		return sayTo99(n/100) + " hundred"
+	}
+	return ""
+}
+
+func sayTo99(n uint64) string {
+	if n < 10 {
+		return digits[n]
+	} else if n < 20 {
+		return teens[n-10]
+	}
+
+	tensPlace := (n % 100) / 10
+	onesPlace := n % 10
+
+	word := ""
+	if tens[tensPlace] != "" {
+		word += tens[tensPlace]
+	}
+	if onesPlace > 0 {
+		if tens[tensPlace] != "" {
+			word += "-" + digits[onesPlace]
+		} else {
+			if word != "" {
+				word += " "
+			}
+			word += digits[onesPlace]
+		}
+	}
+	return word
 }

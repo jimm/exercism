@@ -15,9 +15,12 @@ var tests = []struct {
 	{14, "fourteen"},
 	{20, "twenty"},
 	{22, "twenty-two"},
+	{99, "ninety-nine"},
 	{100, "one hundred"},
+	{115, "one hundred fifteen"},
 	{120, "one hundred twenty"},
 	{123, "one hundred twenty-three"},
+	{999, "nine hundred ninety-nine"},
 	{1000, "one thousand"},
 	{1234, "one thousand two hundred thirty-four"},
 	{1000000, "one million"},
@@ -29,6 +32,7 @@ var tests = []struct {
 		"three hundred twenty-one thousand " +
 		"one hundred twenty-three"},
 	{0, "zero"},
+	{709000000, "seven hundred nine million"},
 	{math.MaxUint64, "eighteen quintillion " +
 		"four hundred forty-six quadrillion " +
 		"seven hundred forty-four trillion " +
