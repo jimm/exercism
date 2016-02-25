@@ -2,16 +2,18 @@ package react
 
 const testVersion = 4
 
+var nextCallbackId = 0
+
 type JReactor struct{}
 type JCell struct {
 	value     int
 	observers []*JCell
 	inputs    []*JCell
 	f         func([]*JCell) int
-	callbacks []func(int)
+	callbacks map[int]func(int)
 }
 type JCallbackHandle struct {
-	index int
+	id int
 }
 
 func New() Reactor {
@@ -32,7 +34,8 @@ func (r *JReactor) CreateCompute1(v Cell, f func(int) int) ComputeCell {
 	wrapper := func(args []*JCell) int {
 		return f(args[0].Value())
 	}
-	c := &JCell{value: f(in.Value()), f: wrapper, inputs: []*JCell{in}}
+	c := &JCell{value: f(in.Value()), f: wrapper, inputs: []*JCell{in},
+		callbacks: make(map[int]func(int), 0)}
 	in.addObserver(c)
 	return c
 }
@@ -46,7 +49,8 @@ func (r *JReactor) CreateCompute2(v1 Cell, v2 Cell, f func(int, int) int) Comput
 	wrapper := func(args []*JCell) int {
 		return f(args[0].Value(), args[1].Value())
 	}
-	c := &JCell{value: f(in1.Value(), in2.Value()), f: wrapper, inputs: []*JCell{in1, in2}}
+	c := &JCell{value: f(in1.Value(), in2.Value()), f: wrapper, inputs: []*JCell{in1, in2},
+		callbacks: make(map[int]func(int), 0)}
 	in1.addObserver(c)
 	in2.addObserver(c)
 	return c
@@ -59,27 +63,27 @@ func (c JCell) Value() int {
 
 // SetValue sets the value of the cell.
 func (c *JCell) SetValue(v int) {
-	c.value = v
-	c.changed()
+	if c.value != v {
+		c.value = v
+		c.changed()
+		for _, f := range c.callbacks {
+			f(v)
+		}
+	}
 }
 
 // AddCallback adds a callback which will be called when the value changes.
 // It returns a callback handle which can be used to remove the callback.
 func (c *JCell) AddCallback(f func(int)) CallbackHandle {
-	c.callbacks = append(c.callbacks, f)
-	return JCallbackHandle{len(c.callbacks) - 1}
+	c.callbacks[nextCallbackId] = f
+	nextCallbackId++
+	return JCallbackHandle{id: nextCallbackId - 1}
 }
 
 // RemoveCallback removes a previously added callback, if it exists.
 func (c *JCell) RemoveCallback(cbh CallbackHandle) {
-	indexer := cbh.(JCallbackHandle)
-	newCallbacks := make([]func(int), 0)
-	for i, f := range c.callbacks {
-		if i != indexer.index {
-			newCallbacks = append(newCallbacks, f)
-		}
-	}
-	c.callbacks = newCallbacks
+	jcbh := cbh.(JCallbackHandle)
+	delete(c.callbacks, jcbh.id)
 }
 
 func (v *JCell) addObserver(c ComputeCell) {
@@ -89,9 +93,6 @@ func (v *JCell) addObserver(c ComputeCell) {
 
 func (v *JCell) changed() {
 	for _, o := range v.observers {
-		o.value = o.f(o.inputs)
-		for _, f := range o.callbacks {
-			f(o.value)
-		}
+		o.SetValue(o.f(o.inputs)) // recalculate
 	}
 }
