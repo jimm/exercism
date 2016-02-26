@@ -12,13 +12,12 @@ func Bracket(s string) (bool, error) {
 	stack := make([]rune, len(s))
 	stackLen := 0
 	for _, c := range s {
-		switch {
-		case isOpeningBracket(c):
+		if isOpeningBracket(c) {
 			stack[stackLen] = c
 			stackLen++
-		case stackLen > 0 && pairs[stack[stackLen-1]] == c:
+		} else if stackLen > 0 && pairs[stack[stackLen-1]] == c {
 			stackLen--
-		default:
+		} else {
 			return false, nil
 		}
 	}
@@ -26,10 +25,5 @@ func Bracket(s string) (bool, error) {
 }
 
 func isOpeningBracket(c rune) bool {
-	for k := range pairs {
-		if c == k {
-			return true
-		}
-	}
-	return false
+	return pairs[c] != 0
 }

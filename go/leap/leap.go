@@ -2,14 +2,13 @@ package leap
 
 const TestVersion = 1
 
-func IsLeapYear(year int) (is bool) {
-	switch {
-	case year%400 == 0:
-		is = true
-	case year%100 == 0:
-		is = false
-	case year%4 == 0:
-		is = true
+func IsLeapYear(year int) bool {
+	if year%400 == 0 {
+		return true
+	} else if year%100 == 0 {
+		return false
+	} else if year%4 == 0 {
+		return true
 	}
-	return
+	return false
 }

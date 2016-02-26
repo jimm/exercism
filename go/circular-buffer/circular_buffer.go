@@ -38,7 +38,7 @@ func (buf *Buffer) WriteByte(c byte) error {
 
 func (buf *Buffer) Overwrite(c byte) {
 	if buf.isFull() {
-		index := (buf.writeIndex - buf.numEntries + buf.size) % buf.size
+		index := buf.writeIndex
 		buf.data[index] = c
 		buf.moveReadHead()
 		buf.moveWriteHead()
@@ -54,11 +54,11 @@ func (buf *Buffer) Reset() {
 	buf.numEntries = 0
 }
 
-func isEmpty() bool {
+func (buf *Buffer) isEmpty() bool {
 	return buf.numEntries == 0
 }
 
-func isFull() bool {
+func (buf *Buffer) isFull() bool {
 	return buf.numEntries == buf.size
 }
 

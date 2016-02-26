@@ -21,6 +21,8 @@ type JCallbackHandle struct {
 	id int
 }
 
+// **************** reactor ****************
+
 func New() Reactor {
 	return &JReactor{working: false}
 }
@@ -61,8 +63,32 @@ func (r *JReactor) CreateCompute2(v1 Cell, v2 Cell, f func(int, int) int) Comput
 	return c
 }
 
+func (r *JReactor) startWorking() {
+	r.working = true
+	r.changed = map[*JCell]bool{}
+}
+
+func (r *JReactor) addChangedCell(c *JCell) {
+	r.changed[c] = true
+}
+
+func (r *JReactor) stopWorking() {
+	for c := range r.changed {
+		val := c.Value()
+		if val != c.OrigValue {
+			for _, f := range c.callbacks {
+				f(val)
+			}
+		}
+		c.OrigValue = nil
+	}
+	r.working = false
+}
+
+// **************** cell ****************
+
 // Value returns the current value of the cell.
-func (c JCell) Value() int {
+func (c *JCell) Value() int {
 	return c.value
 }
 
@@ -81,28 +107,6 @@ func (c *JCell) SetValue(v int) {
 	if !wasWorking {
 		r.stopWorking()
 	}
-}
-
-func (r *JReactor) startWorking() {
-	r.working = true
-	r.changed = map[*JCell]bool{}
-}
-
-func (r *JReactor) addChangedCell(c *JCell) {
-	r.changed[c] = true
-}
-
-func (r *JReactor) stopWorking() {
-	for c, _ := range r.changed {
-		val := c.Value()
-		if val != c.OrigValue {
-			for _, f := range c.callbacks {
-				f(val)
-			}
-		}
-		c.OrigValue = nil
-	}
-	r.working = false
 }
 
 // saveValue sets the new value of the cell and notifies observers. If the
@@ -135,7 +139,7 @@ func (c *JCell) RemoveCallback(cbh CallbackHandle) {
 	delete(c.callbacks, jcbh.id)
 }
 
-func (v *JCell) addObserver(c ComputeCell) {
-	jc := c.(*JCell)
-	v.observers = append(v.observers, jc)
+func (c *JCell) addObserver(cc ComputeCell) {
+	jc := cc.(*JCell)
+	c.observers = append(c.observers, jc)
 }

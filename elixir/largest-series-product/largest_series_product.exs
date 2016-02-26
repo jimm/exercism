@@ -16,10 +16,9 @@ defmodule Series do
   @spec slices(String.t, non_neg_integer) :: [list(non_neg_integer)]
   def slices(number_string, size) do
     if String.length(number_string) < size, do: raise ArgumentError
-    ds = number_string |> digits
-    # Perhaps not the most efficient way to do this, but fine for now
-    (0..length(ds)-size)
-    |> Enum.map(&(Enum.slice(ds, &1, size)))
+    number_string
+    |> digits
+    |> Enum.chunk(size, 1)
   end
 
   @doc """
@@ -28,6 +27,9 @@ defmodule Series do
   given string of numbers.
   """
   @spec largest_product(String.t, non_neg_integer) :: non_neg_integer
+  def largest_product(_, 0), do: 1
+  def largest_product("", 0), do: 1
+  def largest_product("", _), do: raise ArgumentError
   def largest_product(number_string, size) do
     slices(number_string, size)
     |> Enum.map(fn(slice) -> Enum.reduce(slice, 1, &*/2) end)
