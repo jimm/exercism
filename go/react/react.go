@@ -5,8 +5,8 @@ const testVersion = 4
 var nextCallbackId = 0
 
 type reactor struct {
-	working bool
-	changing map[*cell]int
+	workLevel int
+	changed   map[*cell]int
 }
 type cell struct {
 	reactor   *reactor
@@ -24,7 +24,7 @@ type callbackHandle struct {
 // **************** reactor ****************
 
 func New() Reactor {
-	return &reactor{working: false}
+	return &reactor{}
 }
 
 // CreateInput creates an input cell linked into the reactor with the given
@@ -64,21 +64,28 @@ func (r *reactor) CreateCompute2(v1 Cell, v2 Cell, f func(int, int) int) Compute
 }
 
 func (r *reactor) startWorking() {
-	r.working = true
-	r.changing = map[*cell]int{}
+	if r.workLevel == 0 {
+		r.changed = map[*cell]int{}
+	}
+	r.workLevel++
 }
 
 // addChangingCell remembers cells that are about to be recalculated and
 // saves their initial values.
 func (r *reactor) addChangingCell(c *cell) {
-	_, found := r.changing[c]
+	_, found := r.changed[c]
 	if !found {
-		r.changing[c] = c.Value()
+		r.changed[c] = c.Value()
 	}
 }
 
 func (r *reactor) stopWorking() {
-	for c, origValue := range r.changing {
+	r.workLevel--
+	if r.workLevel != 0 {
+		return
+	}
+
+	for c, origValue := range r.changed {
 		val := c.Value()
 		if val != origValue {
 			for _, f := range c.callbacks {
@@ -87,7 +94,6 @@ func (r *reactor) stopWorking() {
 		}
 		c.origValue = nil
 	}
-	r.working = false
 }
 
 // **************** cell ****************
@@ -101,29 +107,12 @@ func (c *cell) Value() int {
 // again the tests don't require that it be thread safe.
 func (c *cell) SetValue(v int) {
 	r := c.reactor
-	wasWorking := r.working
-	if !wasWorking {
-		r.startWorking()
-	}
+	r.startWorking()
 	if c.value != v {
 		r.addChangingCell(c)
 		c.saveValue(v)
 	}
-	if !wasWorking {
-		r.stopWorking()
-	}
-	// if r.setValueLevel == 0 {
-	// 	r.startWorking()
-	// }
-	// r.setValueLevel++
-	// if c.value != v {
-	// 	r.addChangingCell(c)
-	// 	c.saveValue(v)
-	// }
-	// r.setValueLevel--
-	// if r.setValueLevel == 0 {
-	// 	r.stopWorking()
-	// }
+	r.stopWorking()
 }
 
 // saveValue sets the new value of the cell and notifies observers. If the
