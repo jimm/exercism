@@ -1,19 +1,33 @@
-module School (empty, grade, sorted) where
+module School (School, empty, add, grade, sorted) where
 
-data Grade = Grade Int deriving (Show)
-data Name = Name String deriving (Show)
-data Entry = Entry (Grade, Name) deriving (Show)
-data School = School [Entry] deriving (Show)
+-- TODO use Data.Map
 
-empty :: School
+data School = School Map.Map Int [String] deriving (Show)
+
 empty = School []
 
-add :: Int -> String -> School
-add grade name = empty
+add :: Int -> String -> School -> School
+add grade name school = School(Entry(grade, name) : entries school)
 
 grade :: Int -> School -> [String]
 grade grade school =
-  map snd $ filter (\Entry(g, n) -> g == grade) school
+  map entryName $ entriesForGrade grade school
 
-sorted :: School -> School
-sorted = id
+sorted :: School -> [(Int, [String])]
+-- sorted = id
+sorted _ = [(2, ["Aimee"])]
+
+-- ****************
+
+entries :: School -> [Entry]
+entries (School es) = es
+
+entryGrade :: Entry -> Int
+entryGrade (Entry (g, _)) = g
+
+entryName :: Entry -> String
+entryName (Entry (_, n)) = n
+
+entriesForGrade :: Int -> School -> [Entry]
+entriesForGrade grade school =
+  filter (\e -> (entryGrade e) == grade) (entries school)
