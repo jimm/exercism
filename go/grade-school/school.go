@@ -1,10 +1,6 @@
 package school
 
-import (
-	"fmt"
-	"sort"
-	"strings"
-)
+import "sort"
 
 type Grade struct {
 	grade int
@@ -12,11 +8,11 @@ type Grade struct {
 }
 
 type School struct {
-	grades map[int]Grade
+	grades map[int]*Grade
 }
 
 func New() *School {
-	return &School{grades: map[int]Grade{}}
+	return &School{grades: map[int]*Grade{}}
 }
 
 func (s *School) Enrollment() []Grade {
@@ -27,11 +23,8 @@ func (s *School) Enrollment() []Grade {
 	sort.Ints(keys)
 
 	grades := []Grade{}
-	for i, n := range keys {
-		fmt.Println("Enrollment, i", i, "n", n)
-		fmt.Println("s.grades[n].names", s.grades[n].names)
-		names := s.grades[n].names
-		grades[n].names = append(grades[n].names, strings.Join(names, " "))
+	for _, n := range keys {
+		grades = append(grades, *s.grades[n])
 	}
 	return grades
 }
@@ -39,15 +32,17 @@ func (s *School) Enrollment() []Grade {
 func (s *School) Add(student string, grade int) {
 	_, ok := s.grades[grade]
 	if !ok {
-		s.grades[grade] = Grade{grade: grade, names: []string{}}
+		s.grades[grade] = &Grade{grade: grade, names: []string{}}
 	}
-	fmt.Println("s.grades", s.grades)
-	fmt.Println("s.grades[grade]", s.grades[grade])
-	fmt.Println("s.grades[grade].names", s.grades[grade].names)
-	s.grades[grade].names = append(s.grades[grade].names, student)
-	sort.Strings(s.grades[grade].names)
+	g := s.grades[grade]
+	g.names = append(g.names, student)
+	sort.Strings(g.names)
 }
 
 func (s *School) Grade(grade int) []string {
-	return s.grades[grade].names
+	g, ok := s.grades[grade]
+	if ok {
+		return g.names
+	}
+	return []string{}
 }
