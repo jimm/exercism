@@ -36,7 +36,8 @@ var wordFuncs = []wordFunc{
 		[]string{"power"}},
 	{[]string{"power", "of"}, 2,
 		func(x, y int) int {
-			return int(math.Pow(float64(y), float64(x))) },
+			return int(math.Pow(float64(y), float64(x)))
+		},
 		nil},
 }
 
@@ -99,7 +100,7 @@ func parseWord(word string) int {
 	for _, suffix := range cardinalSuffixes {
 		word = strings.TrimSuffix(word, suffix)
 	}
-	
+
 	n, _ := strconv.ParseInt(word, 10, 32) // no errors in tests
 	return int(n)
 }
