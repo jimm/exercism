@@ -22,7 +22,7 @@ func (m *Matrix) Saddle() []Pair {
 
 	pairs := []Pair{}
 	for row, rmis := range rowMaxIndexes {
-		for _, col := range(rmis) {
+		for _, col := range rmis {
 			if includes(colMinIndexes[col], row) {
 				pairs = append(pairs, Pair{row, col})
 			}
@@ -34,12 +34,12 @@ func (m *Matrix) Saddle() []Pair {
 func indexesOfMin(vec []int) []int {
 	minVal := math.MaxInt32
 	indexes := []int{}
-	for _, val := range vec {
+	for i, val := range vec {
 		if val < minVal {
 			minVal = val
-			indexes = []int{val}
+			indexes = []int{i}
 		} else if val == minVal {
-			indexes = append(indexes, val)
+			indexes = append(indexes, i)
 		}
 	}
 	return indexes
@@ -48,12 +48,12 @@ func indexesOfMin(vec []int) []int {
 func indexesOfMax(vec []int) []int {
 	maxVal := math.MinInt32
 	indexes := []int{}
-	for _, val := range vec {
+	for i, val := range vec {
 		if val > maxVal {
 			maxVal = val
-			indexes = []int{val}
+			indexes = []int{i}
 		} else if val == maxVal {
-			indexes = append(indexes, val)
+			indexes = append(indexes, i)
 		}
 	}
 	return indexes
