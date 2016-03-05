@@ -41,7 +41,6 @@ func mainSearch(ints []int, key int) int {
 			max = mid
 		}
 	}
-	return -2 // should not happend
 }
 
 func Message(ints []int, key int) string {
