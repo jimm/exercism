@@ -1,3 +1,5 @@
+// +build !example
+
 package tree
 
 import (
@@ -58,7 +60,6 @@ func Build(records []Record) (*Node, error) {
 							for _ = range []bool{false} {
 								for i, cc := range c.Children {
 									if cc.ID > r.ID {
-										c.Children = append(c.Children, nn)
 										a := make([]*Node, len(c.Children)+1)
 										copy(a, c.Children[:i])
 										copy(a[i+1:], c.Children[i:])
