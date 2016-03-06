@@ -23,6 +23,7 @@ func Build(records []Record) (*Node, error) {
 	}
 	root := &Node{}
 	todo := []*Node{root}
+	oneElementAnything := []int{1}
 	n := 1
 	for {
 		if len(todo) == 0 {
@@ -57,15 +58,14 @@ func Build(records []Record) (*Node, error) {
 							nn := &Node{ID: r.ID}
 							newTodo = append(newTodo, nn)
 						breakpoint:
-							for _ = range []bool{false} {
-								for i, cc := range c.Children {
+							for _ = range oneElementAnything {
+								for _, cc := range c.Children {
 									if cc.ID > r.ID {
-										a := make([]*Node, len(c.Children)+1)
-										copy(a, c.Children[:i])
-										copy(a[i+1:], c.Children[i:])
-										copy(a[i:i+1], []*Node{nn})
-										c.Children = a
+										c.Children = append(c.Children, nil)
+										copy(c.Children[1:], c.Children)
+										c.Children[0] = nn
 										break breakpoint
+
 									}
 								}
 								c.Children = append(c.Children, nn)
