@@ -23,22 +23,23 @@ func Build(records []Record) (*Node, error) {
 
 	root := &Node{}
 	todo := []*Node{root}
-	n := 1
 	for {
 		if len(todo) == 0 {
-			break
+			return root, nil
 		}
 		newTodo := []*Node(nil)
 		for _, c := range todo {
-			for _, r := range records {
+			childRecordIndexes := []int{}
+			for cri, r := range records {
 				if r.Parent != c.ID || r.ID == r.Parent {
 					continue
 				}
 				nn := &Node{ID: r.ID}
 				newTodo = append(newTodo, nn)
-				n++
 				insertChild(c, r, nn)
+				childRecordIndexes = append(childRecordIndexes, cri)
 			}
+			records = removeUsedRecords(records, childRecordIndexes)
 		}
 		todo = newTodo
 	}
@@ -60,30 +61,34 @@ func checkIds(records []Record) error {
 }
 
 func insertChild(c *Node, r Record, nn *Node) {
-	oneElementAnything := []int{1}
-	switch len(c.Children) {
-	case 0:
-		c.Children = []*Node{nn}
-	case 1:
-		if c.Children[0].ID < r.ID {
-			c.Children = []*Node{c.Children[0], nn}
-		} else {
-			c.Children = []*Node{nn, c.Children[0]}
-		}
-	default:
-	breakpoint:
-		for _ = range oneElementAnything {
-			for _, cc := range c.Children {
-				if cc.ID > r.ID {
-					c.Children = append(c.Children, nil)
-					copy(c.Children[1:], c.Children)
-					c.Children[0] = nn
-					break breakpoint
-
-				}
-			}
-			// not found, appending at end
-			c.Children = append(c.Children, nn)
+	for i, cc := range c.Children {
+		if cc.ID > r.ID {
+			c.Children = append(c.Children, nil)
+			copy(c.Children[i+1:], c.Children[i:])
+			c.Children[i] = nn
+			return
 		}
 	}
+	// not found, appending at end
+	c.Children = append(c.Children, nn)
+}
+
+func removeUsedRecords(records []Record, childRecordIndexes []int) []Record {
+	lcri := len(childRecordIndexes)
+	if lcri == 0 {
+		return records
+	}
+
+	workingRecords := make([]Record, len(records) - lcri)
+	wrIndex := 0
+	criIndex := 0
+	for i, r := range records {
+		if criIndex < lcri && childRecordIndexes[criIndex] == i {
+			criIndex++
+		} else {
+			workingRecords[wrIndex] = r
+			wrIndex++
+		}
+	}
+	return workingRecords
 }
