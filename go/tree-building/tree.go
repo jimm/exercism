@@ -33,23 +33,19 @@ func Build(records []Record) (*Node, error) {
 		for _, c := range todo {
 			for _, r := range records {
 				if r.Parent == c.ID && r.ID != r.Parent {
+					nn := &Node{ID: r.ID}
+					newTodo = append(newTodo, nn)
 					n++
 					switch len(c.Children) {
 					case 0:
-						nn := &Node{ID: r.ID}
 						c.Children = []*Node{nn}
-						newTodo = append(newTodo, nn)
 					case 1:
-						nn := &Node{ID: r.ID}
 						if c.Children[0].ID < r.ID {
 							c.Children = []*Node{c.Children[0], nn}
 						} else {
 							c.Children = []*Node{nn, c.Children[0]}
 						}
-						newTodo = append(newTodo, nn)
 					default:
-						nn := &Node{ID: r.ID}
-						newTodo = append(newTodo, nn)
 					breakpoint:
 						for _ = range oneElementAnything {
 							for _, cc := range c.Children {
