@@ -13,6 +13,12 @@ type Node struct {
 	Children []*Node
 }
 
+// Don't know if I'm allowed to modify Record, so this is a wrapper.
+type rec struct {
+	r Record
+	used bool
+}
+
 func Build(records []Record) (*Node, error) {
 	if len(records) == 0 {
 		return nil, nil
@@ -21,25 +27,25 @@ func Build(records []Record) (*Node, error) {
 		return nil, err
 	}
 
+	recs := make([]rec, len(records))
+	for i, r := range records {
+		recs[i] = rec{r, false}
+	}
+
 	root := &Node{}
 	todo := []*Node{root}
-	for {
-		if len(todo) == 0 {
-			return root, nil
-		}
+	for len(todo) > 0 {
 		newTodo := []*Node(nil)
 		for _, c := range todo {
-			childRecordIndexes := []int{}
-			for cri, r := range records {
-				if r.Parent != c.ID || r.ID == r.Parent {
+			for _, rec := range recs {
+				if rec.used || rec.r.Parent != c.ID || rec.r.ID == rec.r.Parent {
 					continue
 				}
-				nn := &Node{ID: r.ID}
+				nn := &Node{ID: rec.r.ID}
 				newTodo = append(newTodo, nn)
-				insertChild(c, r, nn)
-				childRecordIndexes = append(childRecordIndexes, cri)
+				insertChild(c, rec.r.ID, nn)
+				rec.used = true
 			}
-			records = removeUsedRecords(records, childRecordIndexes)
 		}
 		todo = newTodo
 	}
@@ -60,9 +66,9 @@ func checkIds(records []Record) error {
 	return nil
 }
 
-func insertChild(c *Node, r Record, nn *Node) {
+func insertChild(c *Node, id int, nn *Node) {
 	for i, cc := range c.Children {
-		if cc.ID > r.ID {
+		if cc.ID > id {
 			c.Children = append(c.Children, nil)
 			copy(c.Children[i+1:], c.Children[i:])
 			c.Children[i] = nn
@@ -71,24 +77,4 @@ func insertChild(c *Node, r Record, nn *Node) {
 	}
 	// not found, appending at end
 	c.Children = append(c.Children, nn)
-}
-
-func removeUsedRecords(records []Record, childRecordIndexes []int) []Record {
-	lcri := len(childRecordIndexes)
-	if lcri == 0 {
-		return records
-	}
-
-	workingRecords := make([]Record, len(records) - lcri)
-	wrIndex := 0
-	criIndex := 0
-	for i, r := range records {
-		if criIndex < lcri && childRecordIndexes[criIndex] == i {
-			criIndex++
-		} else {
-			workingRecords[wrIndex] = r
-			wrIndex++
-		}
-	}
-	return workingRecords
 }
