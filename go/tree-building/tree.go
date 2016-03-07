@@ -20,7 +20,14 @@ type rec struct {
 	used bool
 }
 
-// Idea: newTodo should remember how many so we don't need to realloc
+// Pre-allocated list of nodes, so we don't have to keep reallocating.
+type nodeList struct {
+	nodes []*Node
+	len   int
+}
+
+// Idea: both todo and newTodo should remember how many so we don't need to
+// realloc
 
 func Build(records []Record) (*Node, error) {
 	if len(records) == 0 {
@@ -36,23 +43,39 @@ func Build(records []Record) (*Node, error) {
 	}
 
 	root := &Node{}
-	todo := []*Node{root}
-	for len(todo) > 0 {
-		newTodo := []*Node(nil)
-		for _, c := range todo {
-			for _, rec := range recs {
-				if rec.used || rec.r.Parent != c.ID || rec.r.ID == rec.r.Parent {
-					continue
-				}
-				nn := &Node{ID: rec.r.ID}
-				newTodo = append(newTodo, nn)
-				insertChild(c, rec.r.ID, nn)
-				rec.used = true
-			}
-		}
-		todo = newTodo
+	todo := newNodeList(len(records))
+	todo.add(root)
+	newTodo := newNodeList(len(todo.nodes))
+	for todo.len > 0 {
+		createChildren(todo, &recs)
+		copyNewChildren(todo, newTodo)
+
 	}
 	return root, nil
+}
+
+func createChildren(todo *nodeList, recs *[]rec) {
+	for i := 0; i < todo.len; i++ {
+		c := todo.nodes[i]
+		for _, rec := range *recs {
+			if rec.used || rec.r.Parent != c.ID || rec.r.ID == rec.r.Parent {
+				continue
+			}
+			insertChild(c, rec.r.ID, &Node{ID: rec.r.ID})
+			rec.used = true
+		}
+	}
+}
+
+// Copy all newly created children to todo list
+func copyNewChildren(todo *nodeList, newTodo *nodeList) {
+	numNewChildren := 0
+	for i := 0; i < todo.len; i++ {
+		copy(newTodo.nodes[numNewChildren:], todo.nodes[i].Children)
+		numNewChildren += len(todo.nodes[i].Children)
+	}
+	copy(todo.nodes, newTodo.nodes)
+	todo.len = numNewChildren
 }
 
 func checkIds(records []Record) error {
@@ -70,14 +93,23 @@ func checkIds(records []Record) error {
 }
 
 func insertChild(c *Node, id int, nn *Node) {
+	c.Children = append(c.Children, nn)
 	for i, cc := range c.Children {
 		if cc.ID > id {
-			c.Children = append(c.Children, nil)
 			copy(c.Children[i+1:], c.Children[i:])
 			c.Children[i] = nn
 			return
 		}
 	}
-	// not found, appending at end
-	c.Children = append(c.Children, nn)
+}
+
+// ================ nodeList ================
+
+func newNodeList(len int) *nodeList {
+	return &nodeList{make([]*Node, len), 0}
+}
+
+func (todo *nodeList) add(nn *Node) {
+	todo.nodes[todo.len] = nn
+	todo.len++
 }
