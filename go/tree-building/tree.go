@@ -13,11 +13,14 @@ type Node struct {
 	Children []*Node
 }
 
-// Don't know if I'm allowed to modify Record, so this is a wrapper.
+// Don't know if modifying Record is in the spirit of this exercise, so this
+// is a wrapper.
 type rec struct {
 	r Record
 	used bool
 }
+
+// Idea: newTodo should remember how many so we don't need to realloc
 
 func Build(records []Record) (*Node, error) {
 	if len(records) == 0 {
