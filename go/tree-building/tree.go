@@ -16,7 +16,7 @@ type Node struct {
 // Don't know if modifying Record is in the spirit of this exercise, so this
 // is a wrapper.
 type rec struct {
-	r Record
+	r    Record
 	used bool
 }
 
