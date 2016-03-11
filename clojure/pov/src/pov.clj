@@ -82,7 +82,26 @@
                  (conj ks ;; index of first ancestor
                        (index-of (second tree) (first ancestors))))))))
 
+(defn- reverse-arc
+  [parent new-root tree]
+  (let [subtrees (subtree-map tree)]
+    (assoc 
+
 (defn of
+  [new-root tree]
+  "Rewrite the tree so that node is the root."
+  (loop [ancestors (ancestors-of new-root tree)
+         tree tree]
+    (if (empty? ancestors)
+      tree
+      (let [parent (first ancestors)
+            grandparent (second ancestors)]
+        (recur (rest ancestors)
+               (if grandparent
+                 (reverse-arc parent new-root (reverse-arc grandparent parent tree))
+                 (reverse-arc parent new-root tree)))))))
+
+#_(defn of
   [new-root tree]
   "Rewrite the tree so that node is the root."
   ;; Find target subtree

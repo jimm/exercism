@@ -2,23 +2,24 @@ package paasio
 
 import (
 	"io"
-	"sync"
 )
 
 const testVersion = 3
 
-type readCounter struct {
-	sync.Mutex
-	r    io.Reader
+type counter struct {
 	n    int64
 	nops int
+	ch   chan int64
+}
+
+type readCounter struct {
+	r io.Reader
+	c *counter
 }
 
 type writeCounter struct {
-	sync.Mutex
-	w    io.Writer
-	n    int64
-	nops int
+	w io.Writer
+	c *counter
 }
 
 type readWriteCounter struct {
@@ -29,47 +30,41 @@ type readWriteCounter struct {
 // **************** read ****************
 
 func NewReadCounter(reader io.Reader) ReadCounter {
-	return &readCounter{r: reader}
+	rc := readCounter{r: reader, c: newCounter()}
+	return &rc
 }
 
-func (c *readCounter) Read(buf []byte) (int, error) {
-	c.Lock()
-	defer c.Unlock()
-
+func (rc *readCounter) Read(buf []byte) (int, error) {
 	var n int
 	var err error
-	if n, err = c.r.Read(buf); err == nil {
-		c.n += int64(n)
-		c.nops++
+	if n, err = rc.r.Read(buf); err == nil {
+		rc.c.add(int64(n))
 	}
 	return n, err
 }
 
-func (c *readCounter) ReadCount() (int64, int) {
-	return c.n, c.nops
+func (rc *readCounter) ReadCount() (int64, int) {
+	return rc.c.n, rc.c.nops
 }
 
 // **************** write ****************
 
 func NewWriteCounter(writer io.Writer) WriteCounter {
-	return &writeCounter{w: writer}
+	wc := writeCounter{w: writer, c: newCounter()}
+	return &wc
 }
 
-func (c *writeCounter) Write(buf []byte) (int, error) {
-	c.Lock()
-	defer c.Unlock()
-
+func (wc *writeCounter) Write(buf []byte) (int, error) {
 	var n int
 	var err error
-	if n, err = c.w.Write(buf); err == nil {
-		c.n += int64(n)
-		c.nops++
+	if n, err = wc.w.Write(buf); err == nil {
+		wc.c.add(int64(n))
 	}
 	return n, err
 }
 
-func (c *writeCounter) WriteCount() (int64, int) {
-	return c.n, c.nops
+func (wc *writeCounter) WriteCount() (int64, int) {
+	return wc.c.n, wc.c.nops
 }
 
 // **************** read/write ****************
@@ -80,18 +75,35 @@ func NewReadWriteCounter(rw io.ReadWriter) ReadWriteCounter {
 	return &readWriteCounter{r: rc, w: wc}
 }
 
-func (c *readWriteCounter) Read(buf []byte) (int, error) {
-	return c.r.Read(buf)
+func (rwc *readWriteCounter) Read(buf []byte) (int, error) {
+	return rwc.r.Read(buf)
 }
 
-func (c *readWriteCounter) Write(buf []byte) (int, error) {
-	return c.w.Write(buf)
+func (rwc *readWriteCounter) Write(buf []byte) (int, error) {
+	return rwc.w.Write(buf)
 }
 
-func (c *readWriteCounter) ReadCount() (int64, int) {
-	return c.r.n, c.r.nops
+func (rwc *readWriteCounter) ReadCount() (int64, int) {
+	return rwc.r.ReadCount()
 }
 
-func (c *readWriteCounter) WriteCount() (int64, int) {
-	return c.w.n, c.w.nops
+func (rwc *readWriteCounter) WriteCount() (int64, int) {
+	return rwc.w.WriteCount()
+}
+
+// **************** counter ****************
+
+func newCounter() *counter {
+	c := counter{ch: make(chan int64)}
+	go func() {
+		for {
+			c.n += <-c.ch
+			c.nops++
+		}
+	}()
+	return &c
+}
+
+func (c *counter) add(n int64) {
+	c.ch <- n
 }
