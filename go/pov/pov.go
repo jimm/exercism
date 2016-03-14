@@ -37,12 +37,15 @@ func (g *Graph) ArcList() []string {
 }
 
 func (g *Graph) ChangeRoot(oldRoot, newRoot string) *Graph {
-	for parent := g.parentOf(newRoot); parent != ""; parent = g.parentOf(newRoot) {
-		if grandparent := g.parentOf(parent); grandparent != "" {
-			g.ChangeRoot(grandparent, parent)
-		}
-		g.reverseArc(parent, newRoot)
+	parent := g.parentOf(newRoot)
+	if parent == "" {
+		return g
 	}
+
+	if grandparent := g.parentOf(parent); grandparent != "" {
+		g.ChangeRoot(grandparent, parent)
+	}
+	g.reverseArc(parent, newRoot)
 	return g
 }
 
@@ -63,7 +66,7 @@ func (g *Graph) reverseArc(parent, child string) {
 }
 
 func (g *Graph) removeArc(parent, label string) {
-	for i := 0; i < len(g.arcs[parent]); i++ {
+	for i := range g.arcs[parent] {
 		if g.arcs[parent][i] == label {
 			g.arcs[parent] = append(g.arcs[parent][0:i], g.arcs[parent][i+1:]...)
 			return
