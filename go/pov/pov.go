@@ -42,7 +42,6 @@ func (g *Graph) ChangeRoot(oldRoot, newRoot string) *Graph {
 			g.ChangeRoot(grandparent, parent)
 		}
 		g.reverseArc(parent, newRoot)
-		parent = g.parentOf(newRoot)
 	}
 	return g
 }
@@ -66,12 +65,7 @@ func (g *Graph) reverseArc(parent, child string) {
 func (g *Graph) removeArc(parent, label string) {
 	for i := 0; i < len(g.arcs[parent]); i++ {
 		if g.arcs[parent][i] == label {
-			// Is there a more efficient way to delete an element from an
-			// array? Do I really have to allocate a new, smaller array?
-			newChildren := make([]string, len(g.arcs[parent])-1)
-			copy(newChildren, g.arcs[parent][0:i])
-			copy(newChildren[i:], g.arcs[parent][i+1:])
-			g.arcs[parent] = newChildren
+			g.arcs[parent] = append(g.arcs[parent][0:i], g.arcs[parent][i+1:]...)
 			return
 		}
 	}

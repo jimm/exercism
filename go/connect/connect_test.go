@@ -36,7 +36,7 @@ var testCases = []struct {
 		expected: "white",
 	},
 	{
-		description: "convulted path",
+		description: "convoluted path",
 		lines: []string{
 			". X X . .",
 			" X . X . X",

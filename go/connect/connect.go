@@ -47,15 +47,17 @@ func pathFound(board [][]byte, player byte, row, col int, success func(int, int)
 	for len(todo) != 0 {
 		newTodo := [][2]int{}
 		for _, loc := range todo {
-			if success(loc[0], loc[1]) {
+			row = loc[0]
+			col = loc[1]
+			if success(row, col) {
 				return true
 			}
-			board[loc[0]][loc[1]] = '.' // don't re-visit
+			board[row][col] = '.' // don't re-visit
 			for r := row - 1; r <= row+1; r++ {
 				for c := col - 1; c <= col+1; c++ {
-					if r >= 0 && r < len(board) &&
-						c >= 0 && c < len(board[0]) &&
-						!(r == row && c == c) &&
+					if r >= 0 && r < len(board) && c >= 0 &&
+						c < len(board[0]) &&
+						!(r == row && c == col) &&
 						board[r][c] == player {
 						newTodo = append(newTodo, [2]int{r, c})
 					}
