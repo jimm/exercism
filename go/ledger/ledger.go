@@ -14,10 +14,6 @@ type Entry struct {
 	Change      int // in cents
 }
 
-type translation struct {
-	date, description, change, dateSep string
-}
-
 func FormatLedger(currency string, locale string, entries []Entry) (string, error) {
 	var entriesCopy []Entry
 	for _, e := range entries {
