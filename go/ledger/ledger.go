@@ -59,13 +59,6 @@ func FormatLedger(currency string, locale string, entries []Entry) (string, erro
 			return "", errors.New("")
 		}
 
-		de := entry.Description
-		if len(de) > 25 {
-			de = de[:22] + "..."
-		} else {
-			de = de + strings.Repeat(" ", 25-len(de))
-		}
-
 		negative := false
 		cents := entry.Change
 		if cents < 0 {
@@ -154,23 +147,30 @@ func FormatLedger(currency string, locale string, entries []Entry) (string, erro
 		for _ = range a {
 			al++
 		}
-		s += fmt.Sprintf("%-10s | %s | %13s\n", d, de, a)
+		s += fmt.Sprintf("%-10s | %-25s | %13s\n", d, truncate(entry.Description, 25), a)
 	}
 	return s, nil
 }
 
 func formatDate(date string, loc localization) (string, error) {
-if len(date) != 10 {
-	return "", errors.New("")
+	if len(date) != 10 {
+		return "", errors.New("")
+	}
+	fields := strings.SplitN(date, "-", 3)
+	if len(fields) < 3 {
+		return "", errors.New("")
+	}
+	d := fmt.Sprintf("%s%s%s%s%s", fields[loc.dateFieldIndexes[0]], loc.dateSep,
+		fields[loc.dateFieldIndexes[1]], loc.dateSep,
+		fields[loc.dateFieldIndexes[2]])
+	return d, nil
 }
-fields := strings.SplitN(date, "-", 3)
-if len(fields) < 3 {
-	return "", errors.New("")
-}
-d := fmt.Sprintf("%s%s%s%s%s", fields[loc.dateFieldIndexes[0]], loc.dateSep,
-	fields[loc.dateFieldIndexes[1]], loc.dateSep,
-	fields[loc.dateFieldIndexes[2]])
-return d, nil
+
+func truncate(s string, maxlen int) string {
+	if len(s) <= 25 {
+		return s
+	}
+	return s[:22] + "..."
 }
 
 // **************** sorting ****************
@@ -182,16 +182,16 @@ func (es entrySort) Len() int { return len(es) }
 func (es entrySort) Swap(i, j int) { es[i], es[j] = es[j], es[i] }
 
 func (es entrySort) Less(i, j int) bool {
-if es[i].Date < es[j].Date {
-	return true
-} else if es[i].Description < es[j].Description {
-	return true
-} else if es[i].Change < es[j].Change {
-	return true
-}
-return false
+	if es[i].Date < es[j].Date {
+		return true
+	} else if es[i].Description < es[j].Description {
+		return true
+	} else if es[i].Change < es[j].Change {
+		return true
+	}
+	return false
 }
 
 func sortEntries(entries []Entry) {
-sort.Sort(entrySort(entries))
+	sort.Sort(entrySort(entries))
 }
