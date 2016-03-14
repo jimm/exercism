@@ -1,0 +1,14 @@
+- Check for empty entries before copying
+- Use copy instead of appends at beginning
+- Extract entry sorting into separate method
+- Use Go's sorting
+- Extract date parsing into a function
+- Use strings.Split to parse date
+- Pass in date string, not Entry
+- Use fmt.Sprintf. Date field order in localization.
+- Goroutines are completely unnecessary.
+- Truncate function
+- Factor out currency symbol
+- Extracted money formatting into a function
+- More money formatting cleanup
+- Better var name
