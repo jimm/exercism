@@ -72,7 +72,7 @@ func FormatLedger(currency string, locale string, entries []Entry) (string, erro
 	})
 	for i, et := range entriesCopy {
 		go func(i int, entry Entry) {
-			d, err := formatDate(entry, locale)
+			d, err := formatDate(entry.Date, locale)
 			if err != nil {
 				co <- struct {
 					i int
@@ -210,11 +210,11 @@ func FormatLedger(currency string, locale string, entries []Entry) (string, erro
 	return s, nil
 }
 
-func formatDate(entry Entry, locale string) (string, error) {
-	if len(entry.Date) != 10 {
+func formatDate(date string, locale string) (string, error) {
+	if len(date) != 10 {
 		return "", errors.New("")
 	}
-	fields := strings.SplitN(entry.Date, "-", 3)
+	fields := strings.SplitN(date, "-", 3)
 	if len(fields) < 3 {
 		return "", errors.New("")
 	}
