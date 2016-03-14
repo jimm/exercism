@@ -18,17 +18,17 @@ type Entry struct {
 
 type localization struct {
 	date, description, change, dateSep string
-	negPrefix, negSuffix, thousands, decimal string
+	negPrefix, negSuffix, afterCurrency, thousands, decimal string
 	dateFieldIndexes [3]int
 }
 
 var localizations = map[string]localization{
 	"en-US": localization{date: "Date", description: "Description",
 		change: "Change", dateSep: "/", dateFieldIndexes: [3]int{1, 2, 0},
-		negPrefix: "(", negSuffix: ")", thousands: ",", decimal: "."},
+		negPrefix: "(", negSuffix: ")", afterCurrency: "", thousands: ",", decimal: "."},
 	"nl-NL": localization{date: "Datum", description: "Omschrijving",
 		change: "Verandering", dateSep: "-", dateFieldIndexes: [3]int{2, 1, 0},
-		negPrefix: "", negSuffix: "-", thousands: ".", decimal: ","},
+		negPrefix: "", negSuffix: "-", afterCurrency: " ", thousands: ".", decimal: ","},
 }
 
 var currencies = map[string]string{
@@ -56,89 +56,12 @@ func FormatLedger(currency string, locale string, entries []Entry) (string, erro
 	}
 
 	s := fmt.Sprintf("%-10s | %-25s | %s\n", loc.date, loc.description, loc.change)
-
 	for _, entry := range entriesCopy {
 		d, err := formatDate(entry.Date, loc)
 		if err != nil {
 			return "", errors.New("")
 		}
-
-		negative := false
-		cents := entry.Change
-		if cents < 0 {
-			cents = cents * -1
-			negative = true
-		}
-		var a string
-		if locale == "nl-NL" {
-			a += currencySymbol
-			a += " "
-			centsStr := strconv.Itoa(cents)
-			switch len(centsStr) {
-			case 1:
-				centsStr = "00" + centsStr
-			case 2:
-				centsStr = "0" + centsStr
-			}
-			rest := centsStr[:len(centsStr)-2]
-			var parts []string
-			for len(rest) > 3 {
-				parts = append(parts, rest[len(rest)-3:])
-				rest = rest[:len(rest)-3]
-			}
-			if len(rest) > 0 {
-				parts = append(parts, rest)
-			}
-			for i := len(parts) - 1; i >= 0; i-- {
-				a += parts[i] + "."
-			}
-			a = a[:len(a)-1]
-			a += ","
-			a += centsStr[len(centsStr)-2:]
-			if negative {
-				a += "-"
-			} else {
-				a += " "
-			}
-		} else if locale == "en-US" {
-			if negative {
-				a += "("
-			}
-			a += currencySymbol
-			centsStr := strconv.Itoa(cents)
-			switch len(centsStr) {
-			case 1:
-				centsStr = "00" + centsStr
-			case 2:
-				centsStr = "0" + centsStr
-			}
-			rest := centsStr[:len(centsStr)-2]
-			var parts []string
-			for len(rest) > 3 {
-				parts = append(parts, rest[len(rest)-3:])
-				rest = rest[:len(rest)-3]
-			}
-			if len(rest) > 0 {
-				parts = append(parts, rest)
-			}
-			for i := len(parts) - 1; i >= 0; i-- {
-				a += parts[i] + ","
-			}
-			a = a[:len(a)-1]
-			a += "."
-			a += centsStr[len(centsStr)-2:]
-			if negative {
-				a += ")"
-			} else {
-				a += " "
-			}
-		} else {
-			return "", errors.New("")
-		}
-		var al int
-		for _ = range a {
-			al++
-		}
+		a := formatMoney(entry.Change, currencySymbol, loc)
 		s += fmt.Sprintf("%-10s | %-25s | %13s\n", d, truncate(entry.Description, 25), a)
 	}
 	return s, nil
@@ -163,6 +86,46 @@ func truncate(s string, maxlen int) string {
 		return s
 	}
 	return s[:22] + "..."
+}
+
+func formatMoney(cents int, currencySymbol string, loc localization) string {
+	a := ""
+	negative := false
+	if cents < 0 {
+		negative = true
+		cents = -cents
+		a += loc.negPrefix
+	}
+	a += currencySymbol
+	a += loc.afterCurrency
+	centsStr := strconv.Itoa(cents)
+	switch len(centsStr) {
+	case 1:
+		centsStr = "00" + centsStr
+	case 2:
+		centsStr = "0" + centsStr
+	}
+	rest := centsStr[:len(centsStr)-2]
+	var parts []string
+	for len(rest) > 3 {
+		parts = append(parts, rest[len(rest)-3:])
+		rest = rest[:len(rest)-3]
+	}
+	if len(rest) > 0 {
+		parts = append(parts, rest)
+	}
+	for i := len(parts) - 1; i >= 0; i-- {
+		a += parts[i] + loc.thousands
+	}
+	a = a[:len(a)-1]
+	a += loc.decimal
+	a += centsStr[len(centsStr)-2:]
+	if negative {
+		a += loc.negSuffix
+	} else {
+		a += " "
+	}
+	return a
 }
 
 // **************** sorting ****************
