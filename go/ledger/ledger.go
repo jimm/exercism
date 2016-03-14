@@ -3,7 +3,6 @@ package ledger
 import (
 	"fmt"
 	"errors"
-	"strconv"
 	"strings"
 	"sort"
 )
@@ -23,11 +22,13 @@ type localization struct {
 }
 
 var localizations = map[string]localization{
-	"en-US": localization{date: "Date", description: "Description",
-		change: "Change", dateSep: "/", dateFieldIndexes: [3]int{1, 2, 0},
+	"en-US": localization{
+		date: "Date", description: "Description", change: "Change",
+		dateSep: "/", dateFieldIndexes: [3]int{1, 2, 0},
 		negPrefix: "(", negSuffix: ")", afterCurrency: "", thousands: ",", decimal: "."},
-	"nl-NL": localization{date: "Datum", description: "Omschrijving",
-		change: "Verandering", dateSep: "-", dateFieldIndexes: [3]int{2, 1, 0},
+	"nl-NL": localization{
+		date: "Datum", description: "Omschrijving", change: "Verandering",
+		dateSep: "-", dateFieldIndexes: [3]int{2, 1, 0},
 		negPrefix: "", negSuffix: "-", afterCurrency: " ", thousands: ".", decimal: ","},
 }
 
@@ -89,43 +90,34 @@ func truncate(s string, maxlen int) string {
 }
 
 func formatMoney(cents int, currencySymbol string, loc localization) string {
-	a := ""
-	negative := false
+	prefix := ""
+	suffix := " "
 	if cents < 0 {
-		negative = true
 		cents = -cents
-		a += loc.negPrefix
+		prefix = loc.negPrefix
+		suffix = loc.negSuffix
 	}
-	a += currencySymbol
-	a += loc.afterCurrency
-	centsStr := strconv.Itoa(cents)
-	switch len(centsStr) {
-	case 1:
-		centsStr = "00" + centsStr
-	case 2:
-		centsStr = "0" + centsStr
-	}
+
+	centsStr := fmt.Sprintf("%03d", cents)
 	rest := centsStr[:len(centsStr)-2]
 	var parts []string
 	for len(rest) > 3 {
 		parts = append(parts, rest[len(rest)-3:])
 		rest = rest[:len(rest)-3]
 	}
-	if len(rest) > 0 {
-		parts = append(parts, rest)
+	parts = append(parts, rest)
+
+	return fmt.Sprintf("%s%s%s%s%s%s%s",
+		prefix, currencySymbol, loc.afterCurrency,
+		strings.Join(reverse(parts), loc.thousands)
+		loc.decimal, centsStr[len(centsStr)-2:], suffix)
+}
+
+func reverse(strs []string) []string {
+	for i, j := 0, len(strs)-1; i < j; i, j = i+1, j-1 {
+strs[i], strs[j] = strs[j], strs[i]
 	}
-	for i := len(parts) - 1; i >= 0; i-- {
-		a += parts[i] + loc.thousands
-	}
-	a = a[:len(a)-1]
-	a += loc.decimal
-	a += centsStr[len(centsStr)-2:]
-	if negative {
-		a += loc.negSuffix
-	} else {
-		a += " "
-	}
-	return a
+	return strs
 }
 
 // **************** sorting ****************
