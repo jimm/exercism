@@ -1,10 +1,10 @@
 package ledger
 
 import (
-	"fmt"
 	"errors"
-	"strings"
+	"fmt"
 	"sort"
+	"strings"
 )
 
 const testVersion = 3
@@ -16,9 +16,9 @@ type Entry struct {
 }
 
 type localization struct {
-	date, description, change, dateSep string
+	date, description, change, dateSep                      string
 	negPrefix, negSuffix, afterCurrency, thousands, decimal string
-	dateFieldIndexes [3]int
+	dateFieldIndexes                                        [3]int
 }
 
 var localizations = map[string]localization{
@@ -56,7 +56,7 @@ func FormatLedger(currency string, locale string, entries []Entry) (string, erro
 		return "", errors.New("")
 	}
 
-	ledgerLines := make([]string, len(entries) + 1)
+	ledgerLines := make([]string, len(entries)+1)
 	ledgerLines[0] = fmt.Sprintf("%-10s | %-25s | %s", loc.date, loc.description, loc.change)
 	for i, entry := range entriesCopy {
 		d, err := formatDate(entry.Date, loc)
@@ -117,7 +117,7 @@ func formatMoney(cents int, currencySymbol string, loc localization) string {
 
 func reverse(strs []string) []string {
 	for i, j := 0, len(strs)-1; i < j; i, j = i+1, j-1 {
-strs[i], strs[j] = strs[j], strs[i]
+		strs[i], strs[j] = strs[j], strs[i]
 	}
 	return strs
 }
