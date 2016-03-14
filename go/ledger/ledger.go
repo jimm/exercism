@@ -1,6 +1,7 @@
 package ledger
 
 import (
+	"fmt"
 	"errors"
 	"strconv"
 	"strings"
@@ -18,15 +19,16 @@ type Entry struct {
 type localization struct {
 	date, description, change, dateSep string
 	negPrefix, negSuffix, thousands, decimal string
+	dateFieldIndexes [3]int
 }
 
 var localizations = map[string]localization{
-	"nl-NL": localization{date: "Datum", description: "Omschrijving",
-		change: "Verandering", dateSep: "-",
-		negPrefix: "", negSuffix: "-", thousands: ".", decimal: ","},
 	"en-US": localization{date: "Date", description: "Description",
-		change: "Change", dateSep: "/",
+		change: "Change", dateSep: "/", dateFieldIndexes: [3]int{1, 2, 0},
 		negPrefix: "(", negSuffix: ")", thousands: ",", decimal: "."},
+	"nl-NL": localization{date: "Datum", description: "Omschrijving",
+		change: "Verandering", dateSep: "-", dateFieldIndexes: [3]int{2, 1, 0},
+		negPrefix: "", negSuffix: "-", thousands: ".", decimal: ","},
 }
 
 var currencies = map[string]string{
@@ -44,26 +46,13 @@ func FormatLedger(currency string, locale string, entries []Entry) (string, erro
 	copy(entriesCopy, entries)
 	sortEntries(entriesCopy)
 
-	// loc := localizations[locale]
-
-	var s string
-	if locale == "nl-NL" {
-		s = "Datum" +
-			strings.Repeat(" ", 10-len("Datum")) +
-			" | " +
-			"Omschrijving" +
-			strings.Repeat(" ", 25-len("Omschrijving")) +
-			" | " + "Verandering" + "\n"
-	} else if locale == "en-US" {
-		s = "Date" +
-			strings.Repeat(" ", 10-len("Date")) +
-			" | " +
-			"Description" +
-			strings.Repeat(" ", 25-len("Description")) +
-			" | " + "Change" + "\n"
-	} else {
+	loc, ok := localizations[locale]
+	if !ok {
 		return "", errors.New("")
 	}
+
+	s := fmt.Sprintf("%-10s | %-25s | %s\n", loc.date, loc.description, loc.change)
+
 	// Parallelism, always a great idea
 	co := make(chan struct {
 		i int
@@ -72,7 +61,7 @@ func FormatLedger(currency string, locale string, entries []Entry) (string, erro
 	})
 	for i, et := range entriesCopy {
 		go func(i int, entry Entry) {
-			d, err := formatDate(entry.Date, locale)
+			d, err := formatDate(entry.Date, loc)
 			if err != nil {
 				co <- struct {
 					i int
@@ -192,8 +181,7 @@ func FormatLedger(currency string, locale string, entries []Entry) (string, erro
 				i int
 				s string
 				e error
-			}{i: i, s: d + strings.Repeat(" ", 10-len(d)) + " | " + de + " | " +
-				strings.Repeat(" ", 13-al) + a + "\n"}
+			}{i: i, s: fmt.Sprintf("%-10s | %s | %13s\n", d, de, a)}
 		}(i, et)
 	}
 	ss := make([]string, len(entriesCopy))
@@ -210,7 +198,7 @@ func FormatLedger(currency string, locale string, entries []Entry) (string, erro
 	return s, nil
 }
 
-func formatDate(date string, locale string) (string, error) {
+func formatDate(date string, loc localization) (string, error) {
 	if len(date) != 10 {
 		return "", errors.New("")
 	}
@@ -218,12 +206,9 @@ func formatDate(date string, locale string) (string, error) {
 	if len(fields) < 3 {
 		return "", errors.New("")
 	}
-	var d string
-	if locale == "nl-NL" {
-		d = fields[2] + "-" + fields[1] + "-" + fields[0]
-	} else if locale == "en-US" {
-		d = fields[1] + "/" + fields[2] + "/" + fields[0]
-	}
+    d := fmt.Sprintf("%s%s%s%s%s", fields[loc.dateFieldIndexes[0]], loc.dateSep,
+		fields[loc.dateFieldIndexes[1]], loc.dateSep,
+		fields[loc.dateFieldIndexes[2]])
 	return d, nil
 }
 
