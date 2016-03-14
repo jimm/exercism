@@ -56,16 +56,18 @@ func FormatLedger(currency string, locale string, entries []Entry) (string, erro
 		return "", errors.New("")
 	}
 
-	s := fmt.Sprintf("%-10s | %-25s | %s\n", loc.date, loc.description, loc.change)
-	for _, entry := range entriesCopy {
+	ledgerLines := make([]string, len(entries) + 1)
+	ledgerLines[0] = fmt.Sprintf("%-10s | %-25s | %s", loc.date, loc.description, loc.change)
+	for i, entry := range entriesCopy {
 		d, err := formatDate(entry.Date, loc)
 		if err != nil {
 			return "", errors.New("")
 		}
 		a := formatMoney(entry.Change, currencySymbol, loc)
-		s += fmt.Sprintf("%-10s | %-25s | %13s\n", d, truncate(entry.Description, 25), a)
+		ledgerLines[i+1] = fmt.Sprintf("%-10s | %-25s | %13s", d,
+			truncate(entry.Description, 25), a)
 	}
-	return s, nil
+	return strings.Join(ledgerLines, "\n") + "\n", nil
 }
 
 func formatDate(date string, loc localization) (string, error) {
@@ -109,7 +111,7 @@ func formatMoney(cents int, currencySymbol string, loc localization) string {
 
 	return fmt.Sprintf("%s%s%s%s%s%s%s",
 		prefix, currencySymbol, loc.afterCurrency,
-		strings.Join(reverse(parts), loc.thousands)
+		strings.Join(reverse(parts), loc.thousands),
 		loc.decimal, centsStr[len(centsStr)-2:], suffix)
 }
 
