@@ -52,40 +52,22 @@ func FormatLedger(currency string, locale string, entries []Entry) (string, erro
 	})
 	for i, et := range entriesCopy {
 		go func(i int, entry Entry) {
-			if len(entry.Date) != 10 {
+			d, err := formatDate(entry, locale)
+			if err != nil {
 				co <- struct {
 					i int
 					s string
 					e error
 				}{e: errors.New("")}
 			}
-			d1, d2, d3, d4, d5 := entry.Date[0:4], entry.Date[4], entry.Date[5:7], entry.Date[7], entry.Date[8:10]
-			if d2 != '-' {
-				co <- struct {
-					i int
-					s string
-					e error
-				}{e: errors.New("")}
-			}
-			if d4 != '-' {
-				co <- struct {
-					i int
-					s string
-					e error
-				}{e: errors.New("")}
-			}
+
 			de := entry.Description
 			if len(de) > 25 {
 				de = de[:22] + "..."
 			} else {
 				de = de + strings.Repeat(" ", 25-len(de))
 			}
-			var d string
-			if locale == "nl-NL" {
-				d = d5 + "-" + d3 + "-" + d1
-			} else if locale == "en-US" {
-				d = d3 + "/" + d5 + "/" + d1
-			}
+
 			negative := false
 			cents := entry.Change
 			if cents < 0 {
@@ -206,6 +188,26 @@ func FormatLedger(currency string, locale string, entries []Entry) (string, erro
 		s += ss[i]
 	}
 	return s, nil
+}
+
+func formatDate(entry Entry, locale string) (string, error) {
+	if len(entry.Date) != 10 {
+		return "", errors.New("")
+	}
+	d1, d2, d3, d4, d5 := entry.Date[0:4], entry.Date[4], entry.Date[5:7], entry.Date[7], entry.Date[8:10]
+	if d2 != '-' {
+		return "", errors.New("")
+	}
+	if d4 != '-' {
+		return "", errors.New("")
+	}
+	var d string
+	if locale == "nl-NL" {
+		d = d5 + "-" + d3 + "-" + d1
+	} else if locale == "en-US" {
+		d = d3 + "/" + d5 + "/" + d1
+	}
+	return d, nil
 }
 
 // **************** sorting ****************
