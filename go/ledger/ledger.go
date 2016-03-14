@@ -15,6 +15,25 @@ type Entry struct {
 	Change      int // in cents
 }
 
+type localization struct {
+	date, description, change, dateSep string
+	negPrefix, negSuffix, thousands, decimal string
+}
+
+var localizations = map[string]localization{
+	"nl-NL": localization{date: "Datum", description: "Omschrijving",
+		change: "Verandering", dateSep: "-",
+		negPrefix: "", negSuffix: "-", thousands: ".", decimal: ","},
+	"en-US": localization{date: "Date", description: "Description",
+		change: "Change", dateSep: "/",
+		negPrefix: "(", negSuffix: ")", thousands: ",", decimal: "."},
+}
+
+var currencies = map[string]string{
+	"USD": "$",
+	"EUR": "€",
+}
+
 func FormatLedger(currency string, locale string, entries []Entry) (string, error) {
 	if len(entries) == 0 {
 		if _, err := FormatLedger(currency, "en-US", []Entry{{Date: "2014-01-01", Description: "", Change: 0}}); err != nil {
@@ -23,8 +42,9 @@ func FormatLedger(currency string, locale string, entries []Entry) (string, erro
 	}
 	entriesCopy := make([]Entry, len(entries))
 	copy(entriesCopy, entries)
-
 	sortEntries(entriesCopy)
+
+	// loc := localizations[locale]
 
 	var s string
 	if locale == "nl-NL" {
@@ -194,18 +214,15 @@ func formatDate(entry Entry, locale string) (string, error) {
 	if len(entry.Date) != 10 {
 		return "", errors.New("")
 	}
-	d1, d2, d3, d4, d5 := entry.Date[0:4], entry.Date[4], entry.Date[5:7], entry.Date[7], entry.Date[8:10]
-	if d2 != '-' {
-		return "", errors.New("")
-	}
-	if d4 != '-' {
+	fields := strings.SplitN(entry.Date, "-", 3)
+	if len(fields) < 3 {
 		return "", errors.New("")
 	}
 	var d string
 	if locale == "nl-NL" {
-		d = d5 + "-" + d3 + "-" + d1
+		d = fields[2] + "-" + fields[1] + "-" + fields[0]
 	} else if locale == "en-US" {
-		d = d3 + "/" + d5 + "/" + d1
+		d = fields[1] + "/" + fields[2] + "/" + fields[0]
 	}
 	return d, nil
 }
