@@ -50,6 +50,10 @@ func FormatLedger(currency string, locale string, entries []Entry) (string, erro
 	if !ok {
 		return "", errors.New("")
 	}
+	currencySymbol, ok := currencies[currency]
+	if !ok {
+		return "", errors.New("")
+	}
 
 	s := fmt.Sprintf("%-10s | %-25s | %s\n", loc.date, loc.description, loc.change)
 
@@ -67,13 +71,7 @@ func FormatLedger(currency string, locale string, entries []Entry) (string, erro
 		}
 		var a string
 		if locale == "nl-NL" {
-			if currency == "EUR" {
-				a += "€"
-			} else if currency == "USD" {
-				a += "$"
-			} else {
-				return "", errors.New("")
-			}
+			a += currencySymbol
 			a += " "
 			centsStr := strconv.Itoa(cents)
 			switch len(centsStr) {
@@ -106,13 +104,7 @@ func FormatLedger(currency string, locale string, entries []Entry) (string, erro
 			if negative {
 				a += "("
 			}
-			if currency == "EUR" {
-				a += "€"
-			} else if currency == "USD" {
-				a += "$"
-			} else {
-				return "", errors.New("")
-			}
+			a += currencySymbol
 			centsStr := strconv.Itoa(cents)
 			switch len(centsStr) {
 			case 1:
