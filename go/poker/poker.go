@@ -289,8 +289,8 @@ func (cs cardRankSort) Len() int { return len(cs.cards) }
 
 func (cs cardRankSort) Swap(i, j int) { cs.cards[i], cs.cards[j] = cs.cards[j], cs.cards[i] }
 
-func (h cardRankSort) Less(i, j int) bool {
-	return h.cards[i].rank < h.cards[j].rank
+func (cs cardRankSort) Less(i, j int) bool {
+	return cs.cards[i].rank < cs.cards[j].rank
 }
 
 func sortHandByRank(hand hand) {
