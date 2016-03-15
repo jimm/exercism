@@ -20,6 +20,7 @@ defmodule Queens do
   """
   @spec to_string(Queens.t()) :: String.t()
   def to_string(queens) do
+
   end
 
   @doc """
