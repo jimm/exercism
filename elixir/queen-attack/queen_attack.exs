@@ -17,13 +17,11 @@ defmodule Queens do
   """
   @spec to_string(Queens.t()) :: String.t()
   def to_string(queens) do
-    (0..7)
-    |> Enum.map_join("\n", &row_to_string(&1, queens))
+    (0..7) |> Enum.map_join("\n", &row_to_string(&1, queens))
   end
 
   defp row_to_string(row, queens) do
-    (0..7)
-    |> Enum.map_join(" ", &square_string(row, &1, queens))
+    (0..7) |> Enum.map_join(" ", &square_string(row, &1, queens))
   end
 
   defp square_string(row, col, %{black: {row, col}}), do: "B"
