@@ -6,13 +6,10 @@ defmodule Queens do
   Creates a new set of Queens
   """
   @spec new(nil | list) :: Queens.t()
-  def new(positions \\ %{white: {0, 3}, black: {7, 3}}) do
-    q = %Queens{white: positions[:white], black: positions[:black]}
-    if q.white == q.black do
-      raise ArgumentError
-    end
-    q
-  end
+  def new(positions \\ %{white: {0, 3}, black: {7, 3}})
+
+  def new(white: a, black: a), do: raise ArgumentError
+  def new(positions),          do: %Queens{white: positions[:white], black: positions[:black]}
 
   @doc """
   Gives a string reprentation of the board with
@@ -21,14 +18,12 @@ defmodule Queens do
   @spec to_string(Queens.t()) :: String.t()
   def to_string(queens) do
     (0..7)
-    |> Enum.map(&row_to_string(&1, queens))
-    |> Enum.join("\n")
+    |> Enum.map_join("\n", &row_to_string(&1, queens))
   end
 
   defp row_to_string(row, queens) do
     (0..7)
-    |> Enum.map(&square_string(row, &1, queens))
-    |> Enum.join(" ")
+    |> Enum.map_join(" ", &square_string(row, &1, queens))
   end
 
   defp square_string(row, col, %{black: {row, col}}), do: "B"
