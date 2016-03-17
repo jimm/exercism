@@ -83,9 +83,9 @@
                        (index-of (second tree) (first ancestors))))))))
 
 (defn- reverse-arc
-  [parent new-root tree]
-  (let [subtrees (subtree-map tree)]
-    (assoc 
+  [parent child tree]
+  (if (node-name tree
+
 
 (defn of
   [new-root tree]
