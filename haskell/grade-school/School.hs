@@ -1,33 +1,23 @@
 module School (School, empty, add, grade, sorted) where
 
--- TODO use Data.Map
+import qualified Data.Map.Strict as Map
+import Data.List (sort)
 
-data School = School Map.Map Int [String] deriving (Show)
+data School a b = School a [b] deriving (Show)
 
-empty = School []
+empty :: School a [b]
+empty = School(Map.empty)
 
-add :: Int -> String -> School -> School
-add grade name school = School(Entry(grade, name) : entries school)
+add :: Int -> String -> School a [b] -> School a [b]
+add grade name school =
+  School(Map.insert grade (name:students))
+  where students = Map.findWithDefault school grade []
 
-grade :: Int -> School -> [String]
+grade :: Int -> School a [b] -> [String]
 grade grade school =
-  map entryName $ entriesForGrade grade school
+  Map.lookup school grade
 
-sorted :: School -> [(Int, [String])]
+sorted :: School Int [String] -> [(Int, [String])]
 -- sorted = id
-sorted _ = [(2, ["Aimee"])]
-
--- ****************
-
-entries :: School -> [Entry]
-entries (School es) = es
-
-entryGrade :: Entry -> Int
-entryGrade (Entry (g, _)) = g
-
-entryName :: Entry -> String
-entryName (Entry (_, n)) = n
-
-entriesForGrade :: Int -> School -> [Entry]
-entriesForGrade grade school =
-  filter (\e -> (entryGrade e) == grade) (entries school)
+sorted school =
+  sort foldr (\names acc -> acc ++ names) [] school
